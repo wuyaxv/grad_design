@@ -5,27 +5,24 @@
 #
 # This is the rendezvous server.
 #
-# Koen Bollen <meneer koenbollen nl>
-# 2010 GPL
-#
 
 import socket
 import struct
 import sys
 
-def addr2bytes( addr ):
+def addr2bytes(addr):
     """Convert an address pair to a hash."""
     host, port = addr
     try:
-        host = socket.gethostbyname( host )
+        host = socket.gethostbyname(host)
     except (socket.gaierror, socket.error):
         raise ValueError("invalid host")
     try:
         port = int(port)
     except ValueError:
         raise ValueError("invalid port")
-    bytes  = socket.inet_aton( host )
-    bytes += struct.pack( "H", port )
+    bytes  = socket.inet_aton(host)
+    bytes += struct.pack("H", port)
     return bytes
 
 def main():
@@ -35,8 +32,8 @@ def main():
     except (IndexError, ValueError):
         pass
 
-    sockfd = socket.socket( socket.AF_INET, socket.SOCK_DGRAM )
-    sockfd.bind( ("", port) )
+    sockfd = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    sockfd.bind(("", port))
     print("listening on *:%d (udp)" % port)
 
     poolqueue = {}
@@ -44,22 +41,22 @@ def main():
         data, addr = sockfd.recvfrom(32)
         print("connection from %s:%d" % addr)
 
-        pool = data.strip()
-        sockfd.sendto( "ok "+pool, addr )
+        pool = data.decode().strip()
+        sockfd.sendto(b"ok "+pool.encode(), addr)
         data, addr = sockfd.recvfrom(2)
-        if data != "ok":
+        if data != b"ok":
             continue
 
         print("request received for pool:", pool)
 
         try:
             a, b = poolqueue[pool], addr
-            sockfd.sendto( addr2bytes(a), b )
-            sockfd.sendto( addr2bytes(b), a )
+            sockfd.sendto(addr2bytes(a), b)
+            sockfd.sendto(addr2bytes(b), a)
             print("linked", pool)
             del poolqueue[pool]
         except KeyError:
             poolqueue[pool] = addr
 
 if __name__ == "__main__":
-    main()
+    main() 

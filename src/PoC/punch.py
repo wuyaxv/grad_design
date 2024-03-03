@@ -10,6 +10,7 @@ import sys
 import socket
 from select import select
 import struct
+from time import sleep
 
 def bytes2addr(bytes):
     """Convert a hash to an address pair."""
@@ -17,6 +18,7 @@ def bytes2addr(bytes):
         raise ValueError("invalid bytes")
     host = socket.inet_ntoa(bytes[:4])
     port, = struct.unpack("H", bytes[-2:])
+    print('Decoded Host and port: {}:{}'.format(host, port))
     return host, port
 
 def main():
@@ -34,11 +36,16 @@ def main():
         print("unable to request!", file=sys.stderr)
         sys.exit(1)
     sockfd.sendto(b"ok", master)
-    print("request sent, waiting for parkner in pool '%s'..." % pool, file=sys.stderr)
+    print("request sent, waiting for partner in pool '%s'..." % pool, file=sys.stderr)
     data, addr = sockfd.recvfrom(6)
 
     target = bytes2addr(data)
     print("connected to %s:%d" % target, file=sys.stderr)
+    sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    while True:
+        sock.sendto(b'Hello world', target)
+        print('message sent to {}: Hello world'.format(target))
+        sleep(5)
 
     while True:
         rfds,_,_ = select([0, sockfd], [], [])

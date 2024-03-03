@@ -1,0 +1,3 @@
+[console_scripts]
+pystun3 = stun.cli:main
+

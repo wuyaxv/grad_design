@@ -1,14 +1,22 @@
+#!/usr/bin/env python3
+
+"""
+Status: PoC
+"""
 import socket
 import threading
 import codecs
+from stun import get_ip_info
 
 class Peer:
+    """Peer
+    """
 
     def __init__(self, host, port):
 
         self.host = host
         self.port = port
-        self.address = {'host':self.host, 'port':self.port}
+        self.address = (self.host, self.port)
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.connections = []
 
@@ -21,12 +29,17 @@ class Peer:
         except socket.error as e:
             print("Failed to connect to {host}:{port}. Error: {error}".format(host=peer_host, port=peer_port, error=e))
 
+    def stun_connect(self, peer_host, peer_port, stun_host, stun_port=3478):
+
+        try: 
+            nat_type, external_ip, external_port = get_ip_info(stun_host=stun_host, stun_port=stun_port)
+
     def listen(self):
 
         self.socket.bind((self.host, self.port))
         self.socket.listen(10)
 
-        print("Listening for connections on {host}:{port}".format(**self.address))
+        print("Listening for connections on {}:{}".format(self.host, self.address)
 
         while True:
             connection, address = self.socket.accept()

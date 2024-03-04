@@ -7,6 +7,7 @@ import threading
 logger = logging.getLogger()
 
 def udp_client(host='120.79.143.252', port=6166):
+
     l = setup_logger("udp_client_logger")
 
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM) # UDP

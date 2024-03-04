@@ -11,22 +11,12 @@
             "id": "0ec396fa3e029732",
             "type": "leaf",
             "state": {
-              "type": "empty",
-              "state": {}
-            }
-          }
-        ]
-      },
-      {
-        "id": "ba2fbcd32c89e091",
-        "type": "tabs",
-        "children": [
-          {
-            "id": "3d52cf313069ff84",
-            "type": "leaf",
-            "state": {
-              "type": "graph",
-              "state": {}
+              "type": "markdown",
+              "state": {
+                "file": "NAT-Traversal.md",
+                "mode": "source",
+                "source": false
+              }
             }
           }
         ]
@@ -95,6 +85,7 @@
             "state": {
               "type": "backlink",
               "state": {
+                "file": "NAT-Traversal.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -111,6 +102,7 @@
             "state": {
               "type": "outgoing-link",
               "state": {
+                "file": "NAT-Traversal.md",
                 "linksCollapsed": false,
                 "unlinkedCollapsed": true
               }
@@ -133,7 +125,7 @@
             "state": {
               "type": "outline",
               "state": {
-                "file": "未命名.md"
+                "file": "NAT-Traversal.md"
               }
             }
           }
@@ -154,8 +146,14 @@
       "command-palette:打开命令面板": false
     }
   },
-  "active": "3314e0c794dfe05b",
+  "active": "0ec396fa3e029732",
   "lastOpenFiles": [
+    "symmetric-nat.png",
+    "restricted-port-cone-nat.png",
+    "NAT-Traversal.md",
+    "restricted-cone-nat.png",
+    "full-cone-nat.png",
+    "未命名",
     "Welcome.md",
     "未命名.md"
   ]

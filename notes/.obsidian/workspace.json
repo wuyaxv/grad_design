@@ -18,8 +18,21 @@
                 "source": false
               }
             }
+          },
+          {
+            "id": "b2df0a915c7d7745",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "如何构建一个基于WireGuard的P2P对等连接.md",
+                "mode": "source",
+                "source": false
+              }
+            }
           }
-        ]
+        ],
+        "currentTab": 1
       }
     ],
     "direction": "vertical"
@@ -85,7 +98,7 @@
             "state": {
               "type": "backlink",
               "state": {
-                "file": "NAT-Traversal.md",
+                "file": "如何构建一个基于WireGuard的P2P对等连接.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -102,7 +115,7 @@
             "state": {
               "type": "outgoing-link",
               "state": {
-                "file": "NAT-Traversal.md",
+                "file": "如何构建一个基于WireGuard的P2P对等连接.md",
                 "linksCollapsed": false,
                 "unlinkedCollapsed": true
               }
@@ -125,7 +138,7 @@
             "state": {
               "type": "outline",
               "state": {
-                "file": "NAT-Traversal.md"
+                "file": "如何构建一个基于WireGuard的P2P对等连接.md"
               }
             }
           }
@@ -146,15 +159,17 @@
       "command-palette:打开命令面板": false
     }
   },
-  "active": "0ec396fa3e029732",
+  "active": "b2df0a915c7d7745",
   "lastOpenFiles": [
+    "full-cone-nat.png",
+    "NAT-Traversal.md",
+    "如何构建一个基于WireGuard的P2P对等连接.md",
+    "drafts/NAT-Traversal.svg",
+    "drafts",
     "symmetric-nat.png",
     "restricted-port-cone-nat.png",
-    "NAT-Traversal.md",
     "restricted-cone-nat.png",
-    "full-cone-nat.png",
     "未命名",
-    "Welcome.md",
-    "未命名.md"
+    "Welcome.md"
   ]
 }

@@ -28,7 +28,7 @@ def setup_peer1(t_host, t_port, s_port):        # target host and target port
     l = setup_logger("setup_peer1_logger")
     log_message(l, "Setting up wg0...", "debug")
 
-    peer1['port'] = s_port
+    peer2['port'] = s_port
 
     # 清除wg0设置
     result=None
@@ -118,8 +118,8 @@ def udp_client(host='49.232.213.235', port=6166):
     l = setup_logger("udp_client_logger")
 
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM) # UDP
-    sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-    sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
+    #sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+    #sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
     #sock.bind(('0.0.0.0', 51820))
     sock.sendto(b'bonjour', (host, port))
 
@@ -137,23 +137,24 @@ def udp_client(host='49.232.213.235', port=6166):
     """
 
     # 设置wireguard
-    wireguard_thread = threading.Thread(target=setup_peer1, args=(*addr, sock.getsockname()[1]))
+    """
+    wireguard_thread = threading.Thread(target=setup_peer1, args=(*addr, 51820))
     wireguard_thread.start()
+    """
 
+    """
     # 启动发送数据的线程
-    #send_thread = threading.Thread(target=type_send, args=(sock, addr))
-    #send_thread.start()
+    send_thread = threading.Thread(target=type_send, args=(sock, addr))
+    send_thread.start()
+    """
 
     # 启动接收数据的线程
-    """
     receive_thread = threading.Thread(target=type_recv, args=(sock, ))
     receive_thread.start()
-    """
 
     # 等待线程结束
-    #receive_thread.join()
-    #send_thread.join()
-    wireguard_thread.join()
+    receive_thread.join()
+   # send_thread.join()
 
 
 if __name__ == '__main__':

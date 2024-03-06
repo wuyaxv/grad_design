@@ -16,11 +16,10 @@ def udp_server(host='0.0.0.0', port=6166):
 
     while True:
         data, addr = sock.recvfrom(1024)
-        log_message(l, "connection from: {}:{}".format(*addr), 'info')
+        log_message(l, "connection from: {}:{} saying {}".format(*addr, data.decode()), 'info')
         addresses.append(addr)
         if len(addresses) >= 2:
             log_message(l, "server - send client info to: {}:{}".format(*addresses[0]), 'info')
-
             sock.sendto(addr_to_msg(addresses[1]), addresses[0])
             log_message(l, "server - send client info to: {}:{}".format(*addresses[1]), 'info')
             sock.sendto(addr_to_msg(addresses[0]), addresses[1])

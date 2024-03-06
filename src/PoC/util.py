@@ -1,6 +1,7 @@
 import struct
 import sys
 from collections import namedtuple
+from logger import *
 
 def addr_from_args(args, host='127.0.0.1', port=9999):
     if len(args) >= 3:
@@ -15,7 +16,6 @@ def addr_from_args(args, host='127.0.0.1', port=9999):
 def msg_to_addr(data):
     ip, port = data.decode('utf-8').strip().split(':')
     return (ip, int(port))
-
 
 # 将node的地址信息打包发送给对等节点
 def addr_to_msg(addr):
@@ -46,15 +46,17 @@ def recv_msg(sock):
     return recvall(sock, msglen)
 
 def type_send(sock, addr):
+    l = setup_logger("type_send_log")
     while True:
         message = sys.stdin.readline().strip()  # 从标准输入读取一行
-        print("indeed I'm going to send some info: {} to {}:{}".format(message, *addr))
         sock.sendto(message.encode(), addr)
+        log_message(l, "message {} send".format(message), "debug")
 
 def type_recv(sock):
+    l = setup_logger("type_recv_message")
     while True:
         data, addr = sock.recvfrom(1024)
-        print("Received: {} from {}:{}".format(data.decode(), *addr))
+        log_message(l, "Received: {} from {}:{}".format(data.decode(), *addr), "debug")
 
 class Client(namedtuple('Client', 'conn, pub, priv')):
 

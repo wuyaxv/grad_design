@@ -30,4 +30,4 @@ IP首先的NAT接受在NAT设备中建立了映射关系的IP设备的报文发�
 |  R-Cone   |  S-Cone   |  ✅   |       |
 |  RP-Cone  |  RP-Cone  |  ✅   |       |
 |  RP-Cone  |  S-Cone   |  ❌   |       |
-|  RP-Cone  |  S-Cone   |  ❌   |       |
+|  S-Cone   |  S-Cone   |  ❌   |       |

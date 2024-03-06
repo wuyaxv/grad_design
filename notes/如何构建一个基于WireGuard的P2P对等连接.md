@@ -1,0 +1,7 @@
+首先,假设节点双方的NAT都可以被穿透（现在我们不考虑具体怎么穿透,我们只考虑有NAT的情况且可以穿透的情况）。要想建立基于WireGuard的连接，那么肯定是需要获得两边Peer的NAT的external ip和external port的，这就需要rendezvous server和两个节点首先进行连接。那么，我们先将节点1（P1）、节点2（P2）同rendezvous服务器（S）进行一个TCP或UDP连接。然后将P1、P2的内网节点信息、公钥信息、NAT类型等（后面再决定具体是什么）分享给rendezvous服务器。这样，rendezvous服务器就可以对每一个节点实体进行识别并且能够进行P2P对等连接的协调，即根据NAT类型等协调如何构建一个P2P连接。
+
+考虑到后续要建立P2P连接，我们有两种选择，建立TCP连接和建立UDP连接的P2P连接。
+- 建立TCP连接，我们需要复用当初使用rendezvous获取的external nat的ip地址和端口信息（这一步阐述在《Peer-to-Peer Communication Across Network Address Translators》中），即我们需要使用rendezvous server受到的P1、P2的{ip:port}信息来建立P2P连接，这样的话我我认为我们无法通过WireGuard来实现隧道，因为我们暴露的端口是TCP协议的端口。
+- 建立UDP连接，我们使用UDP协议同rendezvous server建立连接，暴露P1、P2的NAT设备的IP地址和端口号。此时，我们需要将WireGuard部署到P1、P2中去，让WireGuard在我们之前暴露NAT设备IP地址和端口号时发出的内网报文的IP地址和端口号上进行隧道的建立。
+
+我们先来实现第二种。

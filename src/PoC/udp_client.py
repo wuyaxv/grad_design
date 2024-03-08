@@ -32,6 +32,7 @@ def setup_peer1(t_host, t_port, s_port):        # target host and target port
 
     # 清除wg0设置
     result=None
+    """
     try:
         result = subprocess.run('ip link del dev wg0 type wireguard'.split(), capture_output=True, check=True, text=True)
         # [*] 作为前缀表示标准输出和标准错误输出
@@ -56,6 +57,15 @@ def setup_peer1(t_host, t_port, s_port):        # target host and target port
         log_message(l, "[*] {}".format(result.stderr), "error")
     except subprocess.CalledProcessError as e:
         log_message(l, e, "error")
+    """
+
+    # 使用userspace WireGuard实现
+    try:
+        result = subprocess.run('wireguard wg0'.split(), capture_output=True, check=True, text=True)
+        log_message(l, "[*] {}".format(result.stdout), "debug")
+        log_message(l, "[*] {}".format(result.stderr), "error")
+    except subprocess.CalledProcessError as e:
+        log_message(l, e, "error")
 
     # 设置对端的节点信息
     try:
@@ -75,6 +85,7 @@ def setup_peer2(t_host, t_port, s_port):        # target host and target port
 
     peer2['port'] = s_port
 
+    """
     # 清除wg0设置
     try:
         result = subprocess.run('ip link del dev wg0 type wireguard'.split(), capture_output=True, check=True, text=True)
@@ -100,6 +111,14 @@ def setup_peer2(t_host, t_port, s_port):        # target host and target port
         log_message(l, "[*] {}".format(result.stderr), "error")
     except subprocess.CalledProcessError as e:
         log_message(l, e, "error")
+    """
+    # 使用userspace WireGuard实现
+    try:
+        result = subprocess.run('wireguard wg0'.split(), capture_output=True, check=True, text=True)
+        log_message(l, "[*] {}".format(result.stdout), "debug")
+        log_message(l, "[*] {}".format(result.stderr), "error")
+    except subprocess.CalledProcessError as e:
+        log_message(l, e, "error")
 
     # 设置对端的节点信息
     try:
@@ -113,7 +132,7 @@ def setup_peer2(t_host, t_port, s_port):        # target host and target port
         log_message(l, e, "error")
 
 
-def udp_client(host='49.232.213.235', port=6166):
+def udp_client(host='192.168.6.149', port=6166):
 
     l = setup_logger("udp_client_logger")
 
@@ -127,33 +146,32 @@ def udp_client(host='49.232.213.235', port=6166):
     data, addr = sock.recvfrom(1024)
     log_message(l, 'client received: {} from {}:{}'.format(data.decode(), *addr), 'info')
     addr = msg_to_addr(data)
-    """
     sock.sendto(b'bonsoir', addr)
     log_message(l, 'message sent to {}:{}'.format(*addr), 'info')
     # 连接建立
+    log_message(l, 'after getsockname operation: {}:{}'.format(*sock.getsockname()), 'debug')
 
     data, addr = sock.recvfrom(1024)
     log_message(l, 'client received: {} {}'.format(addr, data), 'info')
-    """
 
+    """
     # 设置wireguard
     wireguard_thread = threading.Thread(target=setup_peer1, args=(*addr, sock.getsockname()[1]))
     wireguard_thread.start()
+    """
 
     # 启动发送数据的线程
-    #send_thread = threading.Thread(target=type_send, args=(sock, addr))
-    #send_thread.start()
+    send_thread = threading.Thread(target=type_send, args=(sock, addr))
+    send_thread.start()
 
     # 启动接收数据的线程
-    """
     receive_thread = threading.Thread(target=type_recv, args=(sock, ))
     receive_thread.start()
-    """
 
     # 等待线程结束
-    #receive_thread.join()
-    #send_thread.join()
-    wireguard_thread.join()
+    receive_thread.join()
+    send_thread.join()
+    #wireguard_thread.join()
 
 
 if __name__ == '__main__':

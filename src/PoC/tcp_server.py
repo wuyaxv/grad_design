@@ -9,6 +9,8 @@ from logger import *
 
 
 clients = {}
+logger = logging.getLogger('server')
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(message)s')
 
 def tcp_server(host='0.0.0.0', port=5005):
     l = setup_logger("tcp_server_log")
@@ -53,4 +55,5 @@ def tcp_server(host='0.0.0.0', port=5005):
 
 
 if __name__ == '__main__':
-    main()
+    logging.basicConfig(level=logging.INFO, message='%(asctime)s %(message)s')
+    tcp_server()

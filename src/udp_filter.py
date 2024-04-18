@@ -3,6 +3,7 @@
 import socket
 import struct
 import logger
+import json
 
 def ip_header_parser(header_bytes):
     l = logger.setup_logger('ip_header_parser')
@@ -10,7 +11,7 @@ def ip_header_parser(header_bytes):
     header_extracted = struct.unpack(header_format, header_bytes[:20])
 
     version             = header_extracted[0] >> 4
-    IHL                 = header_extracted[0] & 0x0f        # IP Header Length, 用于表示首部有多少*32位字*
+    IHL                 = header_extracted[0] & 0x0f        # IP Header Length, 用于表示首部有多少*32位(4字)*
     DSCP                = header_extracted[1] & 0xfc        # RFC 2474, formally known as TOS
     ECN                 = header_extracted[2] & 0x03
     total_length        = header_extracted[2]
@@ -67,19 +68,28 @@ def udp_parser(header_bytes):
               "UDP Checksum: {}".format(checksum),
               "UDP Payload: {}".format(payload)
               ]
-    for _ in output:
-        print(_)
+    return source_port, destination_port, payload
 
-def filter():
-
-    raw_sock = socket.socket(socket.AF_INET, socket.SOCK_RAW, socket.IPPROTO_UDP)
+def filter(raw_sock, rule):
 
     while True:
         data, _ = raw_sock.recvfrom(1024)
-        print("Received {} from {}".format(data, _), "length: {}".format(int(len(data))))
+        if rule(data):
+            return udp_parser(data), _
+            
+            
+def is_control_packet(data):
+    result = False
+    try:
+        packet = json.loads(data.rstrip())
+        if 'command' in packet.keys() and 'payload' in packet.keys():
+            result = True
+    except json.decoder.JSONDecodeError as e:
+        result = False
+    except Exception as e:
+        result = False
 
-        udp_parser(data)
-        
+    return result
 
 if __name__ == "__main__":
     filter()

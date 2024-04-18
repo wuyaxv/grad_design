@@ -30,27 +30,38 @@ class wg:
 
     def run_as_root(self, c):
 
+        # If the program is running as root, don't bother.
+        if os.getuid() == 0:
+            return self.run(c)
+
         if len(self.password) == 0:
             self.password_getter()
 
         command = "sudo -S {}".format(c)     # run as privileged user
+        f = subprocess.run(command.split(), input=self.password, capture_output=True, check=False, text=True)
+        return f.stdout, f.stderr, f.returncode
 
+        """
         try:
             f = subprocess.run(command.split(), input=self.password, capture_output=True, check=True, text=True)
             return f.stdout, f.stderr, f.returncode
         except Exception as e:
             self.logger.log_message(e, "error")
-            exit(-1)
+        """
 
 
     def run(self, c, i=None):
 
+        f = subprocess.run(c.split(), input=i, capture_output=True, check=False, text=True)
+        return f.stdout, f.stderr, f.returncode
+
+        """
         try:
             f = subprocess.run(c.split(), input=i, capture_output=True, check=True, text=True)
             return f.stdout, f.stderr, f.returncode
         except Exception as e:
             self.logger.log_message(e, "error")
-            exit(-1)
+        """
 
     # Check key pairs to see if they exist. Return True if they do, False otherwise
     def check_key_pairs(self, base='.wg-p2p'):
@@ -82,7 +93,6 @@ class wg:
                     exit(-1)
                 return False
             return True
-
         else:
             return False
 
@@ -92,13 +102,13 @@ class wg:
         gen_public = self.run("wg pubkey", gen_private)[0].rstrip()
         write_dir = write_dir.rstrip('/')
         if self.check_key_pairs(write_dir):     # Key pair already exists, and they will be read into the object
-            ans = input("\033[93mAn generated keypair detected, do you wish to overwrite them? [Y/n] \033[0m")
+            ans = input("\033[93m检测到已经有一对密钥生成，你希望重新生成吗? [Y/n] \033[0m")
             if ans != 'N' and ans != 'n': # Wish to overwrite them
                 self.private = gen_private
                 self.public = gen_public
                 if not write_file:      # Not recommended...
-                    print("\033[91mWarning! You are choosing not to save the key pair generated, " \
-                            + "which means you will have to re-generate a new pair of keys next time\033[0m")
+                    print("\033[91m警告！你选择不保存密钥，" \
+                            + "这意味着下次运行程序你的密钥需要重新生成!\033[0m")
                 else:
                     # recreate a new directory to store public and private keys
                     shutil.rmtree(write_dir)
@@ -107,7 +117,6 @@ class wg:
                         f.write(self.public+'\n')
                     with open('{}/private_key'.format(write_dir), 'w') as f:
                         f.write(self.private+'\n')
-
             # else: we've already read both public key and private key in check_key_pairs().
 
         else:   # Key pair doesn't exist yet, we need to create a new pair.
@@ -116,9 +125,9 @@ class wg:
             os.mkdir(write_dir, 0o700)
             self.private = gen_private
             self.public = gen_public
-            if not write_file:
-                print("\033[91mWarning! You are choosing not to save the key pair generated, " \
-                        + "which means you will have to re-generate a new pair of keys next time\033[0m")
+            if not write_file:      # Again, not recommended and doesn't really make any sense.
+                print("\033[91m警告！你选择不保存密钥，" \
+                        + "这意味着下次运行程序你的密钥需要重新生成\033[0m")
             else:
                # write new key pair
                with open('{}/public_key'.format(write_dir), 'w') as f:
@@ -214,10 +223,6 @@ class wg:
         # endpoint is a tuple --> (dst_addr, dst_port)
         if self.check_interface(interface):
             self.run_as_root("wg set {} peer {} endpoint {}:{}".format(interface, peer, endpoint[0], endpoint[1]))
-
-
-
-
         
 if __name__ == "__main__":
     w = wg()

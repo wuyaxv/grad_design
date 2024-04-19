@@ -95,10 +95,11 @@ class rules:
                     or registry[peer][1] != addr[1]:
                registry[peer][0] = addr[0]
                registry[peer][1] = addr[1]
+               logger.l.log_message("Registry of peer: {} updated!".format(peer), "debug")
         else:
-            registry[peer] = {
-                    addr,
-                    }
+            registry[peer] = addr
+            logger.l.log_message("Registry of peer: {} is appended!".format(peer), "debug")
+        logger.l.log_message("Current Registry: {}".format(json.dumps(registry, indent=4)), "info")
 
     @staticmethod
     def spit_error(info):
@@ -106,7 +107,7 @@ class rules:
 
     @staticmethod
     def spit_success(info):
-        return build_success_reply(info)
+        return rules.build_success_reply(info)
 
     # lookup registry and generate reply accordingly
     @staticmethod
@@ -114,11 +115,14 @@ class rules:
         response = None
         try:
             if 'peer' not in payload.keys():
+                logger.l.log_message("Handling request payload: {}".format(payload), "debug")
                 raise RequestException
             else:
                 if rules.check_registry(registry, payload['peer']):
+                    logger.l.log_message("Requested peer found!", "debug")
                     response = rules.build_reply(registry[payload['peer']], addr)
                 else:
+                    logger.l.log_message("Requested peer NOT found!", "debug")
                     response = rules.spit_error('Peer not registerd!')
         except RequestException:
            response = rules.spit_error('An error occurred during parsing the request!')
@@ -129,6 +133,7 @@ class rules:
         response = None
         try:
             if 'peer' not in payload.keys():
+                logger.l.log_message("Handling register payload: {}".format(payload), "debug")
                 raise RegisterException
             else:
                 rules.update_peer(registry, payload['peer'], addr)
@@ -150,7 +155,7 @@ class rules:
         response = None
         packet = json.loads(packet)
         try:
-            if 'command' not in packet.keys() or 'payload' in packet.keys():
+            if 'command' not in packet.keys() or 'payload' not in packet.keys():
                 raise PacketException
             else:
                 payload = packet['payload']
@@ -161,11 +166,11 @@ class rules:
                         response = rules.request_handler(registry, payload, addr)
                     case '_': 
                         response = rules.spit_error("Command not recognized!")
-        except PacketException:
-            response = rules.spit_error("An error occured while parsing your command!")
-            print("An error occurred while parsing the packet!")
+        except PacketException as e:
+            response = rules.spit_error("An error occured while parsing your command: {}".format(e))
+            logger.l.log_message("PACKET_PARSER: PacketException: "+str(e), "error")
         except Exception as e:
-            response = rules.spit_error("An error occured while parsing your command!")
-            print(e)
+            response = rules.spit_error("An error occured while parsing your command: {}".format(e))
+            logger.l.log_message("PACKET_PARSER: "+str(e), "error")
 
         return response

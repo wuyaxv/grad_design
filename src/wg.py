@@ -10,12 +10,12 @@ from getpass import getpass
 
 class wg:
 
-    def __init__(self, l=None):
+    def __init__(self):
 
         self.password = ""    # Privilege password
         self.public   = ""    # Host peer public key
         self.private  = ""    # Host peer private key
-        self.logger = l
+        self.logger = logger.l # setting our own logger, but now we stick to the global one
         self.setlog()         # Setup the logger
 
     def setlog(self):
@@ -220,9 +220,14 @@ class wg:
     # set endpoint for the peer `peer`
     def set_endpoint(self, peer, endpoint:tuple, interface='wg-p2p0'):
 
-        # endpoint is a tuple --> (dst_addr, dst_port)
-        if self.check_interface(interface):
-            self.run_as_root("wg set {} peer {} endpoint {}:{}".format(interface, peer, endpoint[0], endpoint[1]))
+        # endpoint is a tuple -> (dst_addr, dst_port)
+        try:
+            if self.check_interface(interface):
+                answer = self.run_as_root("wg set {} peer {} endpoint {}:{}".format(interface, peer, endpoint[0], endpoint[1]))
+                if answer != 0:
+                    logger.l.log_message("Failed to build a p2p tunnel between host and peer {}!".format(peer), "error")
+                else:
+                    logger.l.log_message("Setup the peer {} successful".format(peer), "info")
         
 if __name__ == "__main__":
     w = wg()

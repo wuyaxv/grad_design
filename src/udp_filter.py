@@ -6,7 +6,6 @@ import logger
 import json
 
 def ip_header_parser(header_bytes):
-    l = logger.setup_logger('ip_header_parser')
     header_format = '!BBHHHBBH4s4s'
     header_extracted = struct.unpack(header_format, header_bytes[:20])
 
@@ -40,7 +39,7 @@ def ip_header_parser(header_bytes):
               ]
 
     for _ in output:
-        print(_)
+        logger.l.log_message(_, "debug")
 
     return version, IHL, DSCP, ECN, total_length, identification, flags, fragment_offset, ttl, protocol,\
             checksum, source_address, destination_address
@@ -68,25 +67,33 @@ def udp_parser(header_bytes):
               "UDP Checksum: {}".format(checksum),
               "UDP Payload: {}".format(payload)
               ]
+
+    for _ in output:
+        logger.l.log_message(_, "debug")
+
     return source_port, destination_port, payload
 
-def filter(raw_sock, rule):
+def filter(raw_sock, port):
 
     while True:
-        data, _ = raw_sock.recvfrom(1024)
-        if rule(data):
-            return udp_parser(data), _
+        data, addr = raw_sock.recvfrom(1024)
+        if is_control_packet(data, port):
+            return udp_parser(data), addr
             
             
-def is_control_packet(data):
+def is_control_packet(data, port):
     result = False
+    source_port, destination_port, payload = udp_parser(data)
     try:
-        packet = json.loads(data.rstrip())
-        if 'command' in packet.keys() and 'payload' in packet.keys():
+        payload_json = json.loads(payload)
+        if 'command' in payload_json.keys() and 'payload' in payload_json.keys() and port == destination_port:
+            logger.l.log_message("message is accepted", "debug")
             result = True
     except json.decoder.JSONDecodeError as e:
+        logger.l.log_message(e, "error")
         result = False
     except Exception as e:
+        logger.l.log_message(e, "error")
         result = False
 
     return result

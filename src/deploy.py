@@ -100,9 +100,9 @@ def create_interface(wg_addr, interface="wg0", mask=24):
             result = subprocess.run(_.split(), capture_output=True, check=True, text=True)
 
     except subprocess.CalledProcessError as e:
-        log_message(l, e, "error")
+        logger.l.log_message(e, "error")
     except Exception as e:
-        log_message(l, e, "error")
+        logger.l.log_message(e, "error")
         
 if __name__ == '__main__':
     

@@ -57,5 +57,10 @@ class logger:
             elif level.lower() == 'critical':
                 self.logger.critical(message)
             else:
-                print("Invalid log level provided.")
+                print("Invalid log level provided: {}".format(level))
+
+"""Ssage description
+You can set up your own logger, or you can simply import this file and use logger.l as your global logger. You can also redefine this logger.l and add some descriptions. Adding descriptions will cause the log information to be stored persistently in a local log file named after your description.
+"""
+l = logger()
 

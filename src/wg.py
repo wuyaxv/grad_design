@@ -6,6 +6,7 @@ import os
 import base64
 import configparser
 import shutil
+import sys
 from getpass import getpass
 
 class wg:
@@ -28,11 +29,11 @@ class wg:
         self.password = getpass("Authentication is required: \U0001F511 ")
 
 
-    def run_as_root(self, c):
+    def run_as_root(self, c, i=None):
 
         # If the program is running as root, don't bother.
         if os.getuid() == 0:
-            return self.run(c)
+            return self.run(c, i)
 
         if len(self.password) == 0:
             self.password_getter()
@@ -64,7 +65,7 @@ class wg:
         """
 
     # Check key pairs to see if they exist. Return True if they do, False otherwise
-    def check_key_pairs(self, base='.wg-p2p'):
+    def check_key_pairs(self, base='.wg-p2p', print_key=False):
 
         base = base.rstrip('/')
         if os.path.exists(base):
@@ -76,6 +77,7 @@ class wg:
                             raise ValueError("public_key文件内公钥长度非256bit")
                         else:
                             self.public = pub
+                            if print_key: print("Host public key: \033[92m{}\033[0m".format(self.public))
                 if os.path.exists(base+'/'+'private_key'):
                     with open(base+'/'+'private_key') as f:
                         priv = f.readline().rstrip()
@@ -83,6 +85,7 @@ class wg:
                             raise ValueError("private_key文件内私钥长度非256bit")
                         else:
                             self.private = priv
+                            if print_key: print("Host private key: \033[91m{}\033[0m".format(self.private))
             except Exception as e:
                 self.logger.log_message(e, 'error')
                 try:
@@ -91,15 +94,27 @@ class wg:
                 except Exception as e:
                     self.logger.log_message(e, "error")
                     exit(-1)
-                return False
-            return True
+                finally:
+                    logger.l.log_message("check_key_pairs: Keypair doesn't exist!")
+                    return False
+            finally:
+                return True
         else:
+            logger.l.log_message("check_key_pairs: Keypair doesn't exist!")
             return False
+
+    def print_key_pairs(self, base='.wg-p2p'):
+        base = base.rstrip('/')
+        if self.check_key_pairs(base):
+            print("Host public key: \033[92m{}\033[0m".format(self.public))
+            print("Host private key: \033[91m{}\033[0m".format(self.private))
+        else:
+            print("\033[91mKeypair doesn't exsits\033[0m")
 
 
     def generate_key_pairs(self, write_file=True, write_dir='.wg-p2p'):
-        gen_private = self.run("wg genkey")[0].rstrip()
-        gen_public = self.run("wg pubkey", gen_private)[0].rstrip()
+        gen_private = self.run_as_root("wg genkey")[0].rstrip()
+        gen_public = self.run_as_root("wg pubkey", gen_private)[0].rstrip()
         write_dir = write_dir.rstrip('/')
         if self.check_key_pairs(write_dir):     # Key pair already exists, and they will be read into the object
             ans = input("\033[93m检测到已经有一对密钥生成，你希望重新生成吗? [Y/n] \033[0m")
@@ -129,12 +144,12 @@ class wg:
                 print("\033[91m警告！你选择不保存密钥，" \
                         + "这意味着下次运行程序你的密钥需要重新生成\033[0m")
             else:
-               # write new key pair
-               with open('{}/public_key'.format(write_dir), 'w') as f:
-                   f.write(self.public+'\n')
-               with open('{}/private_key'.format(write_dir), 'w') as f:
-                   f.write(self.private+'\n')
-
+                # write new key pair
+                with open('{}/public_key'.format(write_dir), 'w') as f:
+                    f.write(self.public+'\n')
+                with open('{}/private_key'.format(write_dir), 'w') as f:
+                    f.write(self.private+'\n')
+                self.run_as_root("chmod -R 600 {}".format(write_dir))
 
 
     def check_interface(self, interface):
@@ -157,7 +172,7 @@ class wg:
                 self.logger.log_message(result[0], 'info')
 
         
-    def configure_wireguard(self, interface='wg-p2p0', key_base_dir='.wg-p2p', port=51820, keep_alive=300, peers=[]):
+    def configure_wireguard(self, interface='wg-p2p0', key_base_dir='.wg-p2p', port=51820, keep_alive=25, peers=[]):
 
         config = configparser.ConfigParser(strict=False)
         config.optionxform = str
@@ -179,7 +194,7 @@ class wg:
             wg_conf.append(
                     {
                         "PublicKey": _,
-                        "AllowedIPs": '0.0.0.0/0',
+                        # "AllowedIPs": '0.0.0.0/0',
                         "PersistentKeepalive": keep_alive,
                     })
         with open(config_file, "w") as f:
@@ -218,18 +233,22 @@ class wg:
         return None
 
     # set endpoint for the peer `peer`
-    def set_endpoint(self, peer, endpoint:tuple, interface='wg-p2p0'):
+    def set_endpoint(self, peer, endpoint:tuple, allowed_ip, interface='wg-p2p0'):
 
         # endpoint is a tuple -> (dst_addr, dst_port)
-        try:
-            if self.check_interface(interface):
-                answer = self.run_as_root("wg set {} peer {} endpoint {}:{}".format(interface, peer, endpoint[0], endpoint[1]))
-                if answer != 0:
-                    logger.l.log_message("Failed to build a p2p tunnel between host and peer {}!".format(peer), "error")
-                else:
-                    logger.l.log_message("Setup the peer {} successful".format(peer), "info")
+        if self.check_interface(interface):
+            answer = self.run_as_root("wg set {} peer {} persistent-keepalive 25 endpoint {}:{} allowed-ips {}/32".format(interface, peer, endpoint[0], endpoint[1], allowed_ip))
+            if answer[2] != 0:
+                logger.l.log_message(answer[1], "error")
+                logger.l.log_message("Failed to build a p2p tunnel between host and peer {}!".format(peer), "error")
+            else:
+                logger.l.log_message(answer[0], "error")
+                logger.l.log_message("Setup the peer {} successful".format(peer), "info")
+        else:
+            logger.l.log_messsage("Interface {} doesn't exist!", "error")
+            exit(-1)
         
-if __name__ == "__main__":
+if __name__ == '__main__':
     w = wg()
-    w.get_wg_peers()
+    w.generate_key_pairs()
 

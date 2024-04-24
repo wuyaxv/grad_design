@@ -8,7 +8,7 @@ from ruler import rules
 
 """
 registry = {
-        'PEER_PUBKEY':(ip, port), 
+        'PEER_PUBKEY':(ip, port, endpoint), 
         ...
         }
 """
@@ -39,6 +39,7 @@ def server(registry=dict(), listening_port=12345):
     host, port = '0.0.0.0', listening_port
     
     with MappingRegisterServer((host, port), Handler, registry) as s:
+        logger.l.log_message("Server is listening at {}:{}".format(host, port), "info")
         s.allow_reuse_address = True
         s.serve_forever()
 

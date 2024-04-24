@@ -84,16 +84,20 @@ def filter(raw_sock, port):
 def is_control_packet(data, port):
     result = False
     source_port, destination_port, payload = udp_parser(data)
+    try: 
+        print(payload.decode('utf-8'))
+    except Exception as e:
+        print(e)
     try:
         payload_json = json.loads(payload)
         if 'command' in payload_json.keys() and 'payload' in payload_json.keys() and port == destination_port:
             logger.l.log_message("message is accepted", "debug")
             result = True
     except json.decoder.JSONDecodeError as e:
-        logger.l.log_message(e, "error")
+        #logger.l.log_message(e, "error")
         result = False
     except Exception as e:
-        logger.l.log_message(e, "error")
+        #logger.l.log_message(e, "error")
         result = False
 
     return result

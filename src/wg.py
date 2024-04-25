@@ -225,6 +225,18 @@ class wg:
             return listen_port
         return None
 
+    def get_allowed_ips(self, peer, interface='wg-p2p0'):
+
+        result = self.run_as_root('wg show {} allowed-ips'.format(interface))
+        if result[2] == 0:
+            split_line = result[0].rstrip().split('\n')
+            split_space = [ _.split() for _ in split_line]
+            for _peer in split_space:
+                if _peer[0] == peer:
+                    return _peer[1:]
+        return None
+        
+
     def get_wg_public(self, interface='wg-p2p0'):
 
         if self.check_interface(interface):
@@ -247,7 +259,21 @@ class wg:
         else:
             logger.l.log_messsage("Interface {} doesn't exist!", "error")
             exit(-1)
-        
+
+    # setup as an wireguard relay, that relay only wireguard nodes
+    def setup_relay(self, interface='wg-p2p0'):
+        logger.l.log_message("sysctl net.ipv4.ip_forward=1", 'debug')
+        output = self.run_as_root('sysctl net.ipv4.ip_forward=1')
+        logger.l.log_message('iptables -I FORWARD -i {} -j ACCEPT; iptables -I FORWARD -o {} -j ACCEPT; iptables -I INPUT -i {} -j ACCEPT'.format(interface, interface, interface), 'debug')
+        output = self.run_as_root('iptables -I FORWARD -i {} -j ACCEPT; iptables -I FORWARD -o {} -j ACCEPT; iptables -I INPUT -i {} -j ACCEPT'.format(interface, interface, interface))
+
+    # setup as an general gateway that relays not only wireguard traffic but also other nodes on the same LAN
+    def setup_gateway(self, interface='enp6s18'):
+        logger.l.log_message("sysctl net.ipv4.ip_forward=1", 'debug')
+        self.run_as_root('sysctl net.ipv4.ip_forward=1')
+        logger.l.log_message('iptables -I FORWARD -i {} -j ACCEPT; iptables -I FORWARD -o {} -j ACCEPT; iptables -I INPUT -i {} -j ACCEPT'.format(interface, interface, interface), 'debug')
+        self.run_as_root('iptables -t nat -A POSTROUTING -o {} -j MASQUERADE'.format(interface))
+
 if __name__ == '__main__':
     w = wg()
     w.generate_key_pairs()

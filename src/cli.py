@@ -33,6 +33,9 @@ def get_parser():
     parser.add_argument('--interface', type=str, help='指定当前主机的默认NIC')
     parser.add_argument('--append', action="store_true", help="设置为添加allowed-ips")
     parser.add_argument('--allowed-ips', type=str, nargs='+', help='指定peer的allowed-ips')
+    
+    if len(sys.argv) == 1:
+        parser.print_help()
 
     return parser.parse_args()
 
